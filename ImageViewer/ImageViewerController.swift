@@ -69,11 +69,6 @@ private extension ImageViewerController {
         tapGestureRecognizer.numberOfTapsRequired = 2
         tapGestureRecognizer.addTarget(self, action: #selector(imageViewDoubleTapped))
         imageView.addGestureRecognizer(tapGestureRecognizer)
-        
-        let panGestureRecognizer = UIPanGestureRecognizer()
-        panGestureRecognizer.addTarget(self, action: #selector(imageViewPanned(_:)))
-        panGestureRecognizer.delegate = self
-        imageView.addGestureRecognizer(panGestureRecognizer)
     }
     
     func setupTransitions() {
@@ -113,32 +108,6 @@ private extension ImageViewerController {
             scrollView.setZoomScale(scrollView.minimumZoomScale, animated: true)
         } else {
             scrollView.zoom(to: zoomRectForScale(scale: scrollView.maximumZoomScale, center: recognizer.location(in: recognizer.view)), animated: true)
-        }
-    }
-    
-    @objc func imageViewPanned(_ recognizer: UIPanGestureRecognizer) {
-        guard transitionHandler != nil else { return }
-            
-        let translation = recognizer.translation(in: imageView)
-        let velocity = recognizer.velocity(in: imageView)
-        
-        switch recognizer.state {
-        case .began:
-            transitionHandler?.dismissInteractively = true
-            dismiss(animated: true)
-        case .changed:
-            let percentage = abs(translation.y) / imageView.bounds.height
-            transitionHandler?.dismissalInteractor.update(percentage: percentage)
-            transitionHandler?.dismissalInteractor.update(transform: CGAffineTransform(translationX: translation.x, y: translation.y))
-        case .ended, .cancelled:
-            transitionHandler?.dismissInteractively = false
-            let percentage = abs(translation.y + velocity.y) / imageView.bounds.height
-            if percentage > 0.25 {
-                transitionHandler?.dismissalInteractor.finish()
-            } else {
-                transitionHandler?.dismissalInteractor.cancel()
-            }
-        default: break
         }
     }
 }
